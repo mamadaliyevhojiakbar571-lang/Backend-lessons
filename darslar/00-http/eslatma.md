@@ -31,7 +31,7 @@ PUT    /books/1
 DELETE /books/1
 ```
 
-## 2-dars · 2-oktyabr
+## 2-dars · 1-oktyabr
 
 ### Status kod guruhlari
 Kodning birinchi raqami guruhni bildiradi:
