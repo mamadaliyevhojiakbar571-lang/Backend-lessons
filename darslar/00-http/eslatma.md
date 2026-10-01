@@ -1,14 +1,63 @@
-1.Server bu - malumotlar saqlanadigon kampyuter yani javob qaytaradign mijoz esa nima sorashni aytadign brauzer yoki faoydalanuvchi 
-2.bu 2 qismda iborat edi hop boshi nima qilishni qoraydi 2 chsi esa osha nimani nima qish kerailni aytadu masln birinchisiga    ochirishni olamz  va ikinxhiaiga kitobni
-3 get - oqish post-yanig yartish , put/putch - ozgartish , delete ochirish 
-4. GET /books 
-   GET /books/1
-   POST /books
-   PUT /books/1
-   DELETE /books/1
-  2- qadam 
-5. 1.Sttus kodida 2 bian bosjlamgnlar muvafaqiyatli ishlayapti degan manoni beradi 4 bilan boshlanganlar hato bizda ekanlgigini 5 bilan boshlanganlar esa serverda muammo ekanligni bildradi
-6. 2. 200- muvafaqiyatli ishlayapti, 201- POST yangi foydalanuvchi muvafaqiyarli yaratildi , 204-bajarildi lekn qaytariadgn narsa yoq, 400 - sorvda hatolik yani bizni soraovda 401-foydalanuchchi royhatdan otmagan 403-Foydalanuvchi tizimdan oʻtgan, lekin bu amalni bajarishga huquqi  yoʻq, 404-bunday narsa yoq yani serverda toplmadi 500 serverda hatilk 
-7. 3. 401 bilan 403 ni farqi shundaki misol tariqasida bitta saytni olaylik biz unda yanig foydalnuvchimiz tabiyki bizda login bolmaydi royhatdan otish kerak boladi va 401 biz royhatdan otmagan bolsak sen royhatdan otmagasn deb bildradi hop royhtdan otgandan keyin biz oddiy foydlanuchi bolamiz lekin biz admin panellga kirmoqchimiz 403 esa oshani oldini oladi yani sen foydaluvxhisna lekin kira olmaysan yani amal baajrilmaydi yoki saytdan nimadr ochirmoqchi blsak bomaydi 
-8. 4. Frontenda parlni tekshirb bolmaslkdan sabab chunki curl orqali terminlda serverga sorav yuborish mumkin forntenda esa tugmalar boladi lekin uni aylanib otish mumkin    
-          
+# 0-bosqich: HTTP asoslari
+
+## 1-dars · 29-sentyabr
+
+### Server va mijoz
+**Server** — ma'lumotlar saqlanadigan va so'rovlarga javob qaytaradigan kompyuter.
+**Mijoz** — serverga so'rov yuboradigan dastur: brauzer, mobil ilova yoki `curl`. Foydalanuvchi (inson) esa mijoz orqali ishlaydi.
+
+### So'rovning yuragi: metod + yo'l
+So'rovning asosi ikki qismdan iborat:
+1. **Metod** — nima qilish kerakligini bildiradi
+2. **Yo'l (path)** — amal nima ustida bajarilishini ko'rsatadi
+
+Masalan, kitobni o'chirish uchun metod — `DELETE`, yo'l — `/books/1`:
+`DELETE /books/1`
+
+### 4 ta metod
+| Metod | Ma'nosi |
+|---|---|
+| `GET` | o'qish |
+| `POST` | yangi yaratish |
+| `PUT` / `PATCH` | o'zgartirish |
+| `DELETE` | o'chirish |
+
+### CRUD: /books
+```
+GET    /books
+GET    /books/1
+POST   /books
+PUT    /books/1
+DELETE /books/1
+```
+
+## 2-dars · 2-oktyabr
+
+### Status kod guruhlari
+Kodning birinchi raqami guruhni bildiradi:
+- **2xx** — so'rov muvaffaqiyatli bajarildi
+- **4xx** — xato mijoz tomonida, ya'ni so'rovni to'g'rilash kerak
+- **5xx** — xato server tomonida
+
+### 8 ta asosiy kod
+| Kod | Ma'nosi |
+|---|---|
+| `200` | so'rov muvaffaqiyatli bajarildi |
+| `201` | yangi resurs yaratildi (odatda `POST` dan keyin) |
+| `204` | bajarildi, lekin qaytaradigan narsa yo'q |
+| `400` | so'rov noto'g'ri tuzilgan (masalan, majburiy maydon bo'sh) |
+| `401` | foydalanuvchi tizimga kirmagan (login qilinmagan), server uni tanimaydi |
+| `403` | foydalanuvchi tizimga kirgan, lekin bu amalni bajarishga huquqi yo'q |
+| `404` | so'ralgan resurs yoki yo'l serverda topilmadi |
+| `500` | server ichida xatolik yuz berdi |
+
+### 401 va 403 farqi
+Bitta saytni misol qilib olaylik. Biz unga endi kirdik va hali login qilmaganmiz.
+
+- **401 — "Sen kimsan?"** Login qilmagan bo'lsak, server bizni tanimaydi va himoyalangan sahifani ochmaydi.
+- **403 — "Seni taniyman, lekin mumkin emas."** Login qilganimizdan keyin biz oddiy foydalanuvchimiz. Admin panelga kirmoqchi yoki saytdan biror narsani o'chirmoqchi bo'lsak, server bizni taniydi, lekin ruxsat bermaydi.
+
+### Nega parolni faqat frontendda tekshirib bo'lmaydi?
+Frontenddagi tekshiruv va tugmalarni aylanib o'tish mumkin: masalan, `curl` orqali terminaldan serverga to'g'ridan-to'g'ri so'rov yuborsa bo'ladi. Shuning uchun haqiqiy tekshiruv har doim **serverda** bo'lishi kerak.
+
+> Frontend — qulaylik, backend — xavfsizlik.
