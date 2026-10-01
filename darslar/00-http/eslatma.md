@@ -61,3 +61,28 @@ Bitta saytni misol qilib olaylik. Biz unga endi kirdik va hali login qilmaganmiz
 Frontenddagi tekshiruv va tugmalarni aylanib o'tish mumkin: masalan, `curl` orqali terminaldan serverga to'g'ridan-to'g'ri so'rov yuborsa bo'ladi. Shuning uchun haqiqiy tekshiruv har doim **serverda** bo'lishi kerak.
 
 > Frontend — qulaylik, backend — xavfsizlik.
+
+## 3-dars · 1-oktyabr
+
+### Header va body
+So'rovni konvertdagi xatga o'xshatish mumkin:
+- **Header** — konvert ustidagi, ya'ni tashqi ma'lumot. Masalan, so'rov qayerga jo'natilayotgani shu yerda yoziladi.
+- **Body** — konvert ichidagi asosiy ma'lumot.
+
+### Content-Type
+```
+Content-Type: application/json; charset=utf-8
+```
+- `application/json` — body'ning formati
+- `charset=utf-8` — harflar qanday yozilgani
+
+### curl flaglari
+| Flag | Vazifasi |
+|---|---|
+| `-X` | metodni tanlaydi (masalan, `-X POST`) |
+| `-H` | header qo'shadi |
+| `-d` | body'da yuboriladigan ma'lumot |
+
+### Nega yaratilgan post 404 berdi?
+`POST /posts` dan keyin server `201` va `id: 101` qaytardi, lekin `GET /posts/101` — `404`.
+Sababi: bu mashq uchun qilingan server bo'lib, postni **ma'lumotlar bazasiga saqlamadi**, shuning uchun keyin uni topa olmadi.
