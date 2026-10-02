@@ -86,3 +86,56 @@ Content-Type: application/json; charset=utf-8
 ### Nega yaratilgan post 404 berdi?
 `POST /posts` dan keyin server `201` va `id: 101` qaytardi, lekin `GET /posts/101` — `404`.
 Sababi: bu mashq uchun qilingan server bo'lib, postni **ma'lumotlar bazasiga saqlamadi**, shuning uchun keyin uni topa olmadi.
+
+
+## 4-dars · 2-oktyabr — Birinchi server
+
+### So'rov yuborish va qabul qilish nega kerak?
+Universitet guruhi misolida: starosta vazifani **serverga** yuboradi (`POST`), talabalar esa uni **serverdan** oladi (`GET`).
+Server **o'rtada** turadi — shuning uchun bir odam qo'shgan narsani boshqalar ham ko'radi.
+
+### `localhost` va port
+- **`localhost`** — o'zimizning kompyuterimiz
+- **`8000`** — port, ya'ni kirish eshigi
+
+### `python3 -m http.server`
+Papkani saytga aylantiradi, lekin ichidagi **hamma narsani** ochib beradi.
+qan
+### Nega terminal "qotib qoladi"?
+Sababi — `serve_forever()`: server to'xtamasdan so'rov kutib turadi. To'xtatish — **Ctrl+C**.
+
+### Server javobining 4 qismi
+| Qism | Python'da |
+|---|---|
+| 1. Status | `self.send_response(200)` |
+| 2. Header — body qanday formatda va qaysi yozuvda | `self.send_header("Content-Type", "text/plain; charset=utf-8")` |
+| 3. Headerlar tugashi (bo'sh qator) | `self.end_headers()` |
+| 4. Body | `self.wfile.write("...".encode())` |
+
+### `do_GET` ni kim chaqiradi?
+Python'ning o'zi (`HTTPServer`) — **GET so'rov kelganda**.
+
+### Meros
+Koddagi meros — `BaseHTTPRequestHandler`. U javobning 4 qismini noldan yozmasdan, **otadan meros** olish uchun kerak.
+
+### `.encode()`
+Harflarni baytlarga aylantirish uchun kerak.
+
+### Oxirgi qator nega chekinishsiz?
+Class — bu qolip, oxirgi qator esa o'sha qolipni **ishlatadi**. Shuning uchun u class'dan tashqarida, ya'ni chekinishsiz turadi.
+
+### `text/plain` va `text/html`
+Body bir xil — masalan, `<h1>Salom</h1>`:
+- **`text/html`** — brauzer teglarni **chizadi**, katta sarlavha ko'rinadi (JavaScript'dagi `innerHTML` kabi)
+- **`text/plain`** — teglar **matn** bo'lib ko'rinadi (`textContent` kabi)
+
+### Server uchun brauzer va curl
+Server uchun **farq yo'q** — ikkalasidan ham bir xil HTTP matni keladi.
+Xulosa: server mijozga ko'r-ko'rona ishonmaydi, hamma narsani **o'zi** tekshiradi.
+
+### Traceback'ni o'qish
+Pastdan o'qi → o'z faylingni top → `^^^^` ga qara.
+
+### Bugungi 2 ta xato
+- **`NameError`** — "bunday **nom**ni tanimayman"
+- **`AttributeError`** — "bu narsada bunday **xususiyat/funksiya** yo'q"
