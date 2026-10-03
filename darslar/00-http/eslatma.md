@@ -139,3 +139,66 @@ Pastdan o'qi → o'z faylingni top → `^^^^` ga qara.
 ### Bugungi 2 ta xato
 - **`NameError`** — "bunday **nom**ni tanimayman"
 - **`AttributeError`** — "bu narsada bunday **xususiyat/funksiya** yo'q"
+
+## 5-dars · 2-oktyabr (kechqurun) — Routing va funksiya
+
+### Muammo
+Birinchi server hamma yo'lga (`/tasks`, `/users`, mavjud bo'lmagan manzil) **bir xil javob** va **200** qaytarardi — yo'llarni ajrata olmasdi.
+
+### Routing
+"Qaysi yo'l kelsa — qaysi kod ishlasin" degan qoida. So'ralgan yo'l `self.path` da turadi (meros orqali keladi, import shart emas):
+```python
+if self.path == '/users':     ...
+elif self.path == '/tasks':   ...
+else:                         ... # 404
+```
+
+### `javob_ber` funksiyasi (DRY — o'zingni takrorlama)
+Har bir `if`/`else` ichidagi `self.javob_ber()` faqat **status** va **body**ni oladi. Qolgan qolip (header, bo'sh qator) bir xil bo'lgani uchun funksiya ichida turadi va avtomatik chiqadi.
+```python
+def javob_ber(self, status, matn):
+    self.send_response(status)
+    self.send_header('Content-Type', 'text/plain; charset=utf-8')
+    self.end_headers()
+    self.wfile.write(matn.encode())
+```
+`do_GET` 12 qatordan **3 qatorga** qisqardi.
+
+### Yodda tutish
+- **400** — so'rov noto'g'ri tuzilgan, **404** — bunday narsa yo'q
+- 🔒 404 xabarida ortiqcha ma'lumot (masalan, foydalanuvchilar ro'yxati) bermaslik kerak
+- Kod o'zgarsa — eski serverni **Ctrl+C** bilan to'xtatib, qayta ishga tushirish kerak (aks holda port band)
+
+## 6-dars · 3-oktyabr — FastAPI'ga birinchi qadam
+
+### Takrorlash: ikki muhim tushuncha
+- **`do_GET` ni server chaqiradi — har safar GET so'rov kelganda.** Server 2 soat ishlab, 5 ta so'rov kelsa — `do_GET` 5 marta chaqiriladi.
+- **Brauzer ham, curl ham — mijoz.** Ikkalasi ham so'rov yuboradi va javob oladi. Farqi: brauzer javobni chiroyli chizadi, curl xom ko'rsatadi. Server uchun farq yo'q — shuning uchun server o'zi tekshirishi kerak (ruxsat bo'lmasa — **403**).
+
+### O'rnatish
+```bash
+cd darslar/03-fastapi
+python3 -m venv .venv
+source .venv/bin/activate          # avval qutiga kirish!
+pip install "fastapi[standard]"    # qo'shtirnoq shart (zsh)
+```
+
+### Birinchi endpoint
+```python
+from fastapi import FastAPI
+
+app = FastAPI()
+
+@app.get("/")
+def qaytar():
+    return {"habar": "Hello World"}
+```
+Ishga tushirish: `fastapi dev main.py` → `curl -v http://localhost:8000/` → **200** va `content-type: application/json`.
+
+### `server3.py` va FastAPI
+| | `server3.py` | FastAPI |
+|---|---|---|
+| Routing | `if self.path == "/..."` | `@app.get("/...")` |
+| Javob | `self.javob_ber(200, ...)` | `return ...` |
+| Format | `text/plain` | JSON — avtomatik |
+| Status va header | o'zim yozardim | FastAPI o'zi qo'shadi |
