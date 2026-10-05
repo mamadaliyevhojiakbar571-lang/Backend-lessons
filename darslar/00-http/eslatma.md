@@ -100,7 +100,7 @@ Server **o'rtada** turadi — shuning uchun bir odam qo'shgan narsani boshqalar 
 
 ### `python3 -m http.server`
 Papkani saytga aylantiradi, lekin ichidagi **hamma narsani** ochib beradi.
-qan
+
 ### Nega terminal "qotib qoladi"?
 Sababi — `serve_forever()`: server to'xtamasdan so'rov kutib turadi. To'xtatish — **Ctrl+C**.
 
@@ -202,3 +202,43 @@ Ishga tushirish: `fastapi dev main.py` → `curl -v http://localhost:8000/` → 
 | Javob | `self.javob_ber(200, ...)` | `return ...` |
 | Format | `text/plain` | JSON — avtomatik |
 | Status va header | o'zim yozardim | FastAPI o'zi qo'shadi |
+
+## 7-dars · 4-oktyabr — FastAPI: endpointlar
+
+### `FastAPI` va `FastAPI()`
+- **`FastAPI`** — qolip (kutubxonadan tayyor keladi)
+- **`FastAPI()`** — qolipdan bitta ilova yasash 🍪 → `app = FastAPI()`
+
+### `@app.get("/tasks")` qismlari
+| Qism | Ma'nosi |
+|---|---|
+| `@` | yorliq belgisi 🏷️ |
+| `app` | ilova nomi |
+| `.get` | GET metodi |
+| `"/tasks"` | yo'l (path) |
+
+### Endpoint
+Ilovadagi bitta "manzil": **metod + yo'l + javob beruvchi funksiya**. Masalan: `GET /tasks → tasks()`.
+Restoranda — menyudagi bitta taom 🍽️
+
+### Nega FastAPI'da funksiya nomi ixtiyoriy?
+- `http.server` funksiyani **ismi bo'yicha** qidirardi — shuning uchun `do_GET` nomi shart edi
+- FastAPI esa **yorlig'i bo'yicha** topadi — nom muhim emas (lekin ma'noli bo'lsin)
+
+### Nechta ilova kerak?
+3 ta endpoint uchun **1 ta ilova** yetarli — bitta restoran, menyuda ko'p taom.
+
+### Python → JSON
+| Python | JSON | Belgisi |
+|---|---|---|
+| `list` | massiv | `[ ]` |
+| `dict` | obyekt | `{ }` |
+
+React uchun qulay: massivni darhol `.map()` qilib `<li>` larga aylantirish mumkin.
+
+### 404 va 500
+- Mavjud bo'lmagan yo'l (`/salom`) → **404** `{"detail":"Not Found"}` — FastAPI o'zi qaytaradi (mijoz xatosi)
+- Kodda xato (masalan, `1/0`) → **500** (server xatosi)
+
+### `/docs`
+FastAPI avtomatik yaratadigan sahifa: barcha endpointlarni brauzerda ko'rib, sinab ko'rish mumkin.
