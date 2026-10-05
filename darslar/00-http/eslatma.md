@@ -242,3 +242,41 @@ React uchun qulay: massivni darhol `.map()` qilib `<li>` larga aylantirish mumki
 
 ### `/docs`
 FastAPI avtomatik yaratadigan sahifa: barcha endpointlarni brauzerda ko'rib, sinab ko'rish mumkin.
+
+## 8-dars · 5-oktyabr — Yo'l parametrlari va 404
+
+### Git: tekshirish va tuzatish
+| Buyruq | Nima qiladi |
+|---|---|
+| `git status` | **qaysi** fayllar o'zgarganini ko'rsatadi |
+| `git diff` | fayl **ichida** nima o'zgarganini ko'rsatadi (qizil `-` eski, yashil `+` yangi) |
+| `git restore fayl` | faylni oxirgi commitdagi holatiga qaytaradi |
+
+Bugun `git diff` tasodifan buzilgan qatorni topdi (`http.server` → `http.servr`), `git restore` uni tuzatdi.
+**Qoida:** commitga faqat ataylab qilingan o'zgarishlar tushishi kerak.
+
+### Yo'l parametri `{task_id}`
+```python
+@app.get("/tasks/{task_id}")
+def task(task_id: int):
+    if task_id < 0 or task_id >= len(vazifalar):
+        raise HTTPException(status_code=404, detail="Vazifa topilmadi")
+    return {"vazifa": vazifalar[task_id]}
+```
+- `{task_id}` — yo'ldagi bo'sh joy: raqamni **mijoz** yozadi (`/tasks/1` → `task_id = 1`)
+- Shuning uchun **bitta** endpoint hamma vazifalarga xizmat qiladi
+- `vazifalar[task_id]` — ro'yxatdan o'sha raqamdagi elementni oladi
+
+### Type hint `: int`
+- URL — matn: `/tasks/0` dan `"0"` (str) keladi, ro'yxatga esa `0` (int) kerak
+- `: int` yozilmasa → `vazifalar["0"]` → **500** (`TypeError`)
+- `: int` yozilsa → FastAPI matnni songa aylantiradi; `/tasks/abc` → **422** (yaroqsiz ma'lumot)
+
+### 404 va `HTTPException`
+- `: int` faqat **turni** tekshiradi, **mavjudlikni** emas: `/tasks/99` → `IndexError` → **500**
+- Mavjud bo'lmagan narsa — mijoz xatosi → **404** bo'lishi kerak
+- `raise HTTPException(...)` funksiyani shu yerda to'xtatadi va mijozga to'g'ri status qaytaradi
+- `task_id < 0` ham tekshiriladi: manfiy son ro'yxatni oxiridan sanaydi (`vazifalar[-1]` — oxirgisi)
+
+### Endpoint funksiyasi nima qiladi?
+**Qabul qiladi → tekshiradi → topib qaytaradi.**
