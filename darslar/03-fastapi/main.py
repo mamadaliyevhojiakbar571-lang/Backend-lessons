@@ -1,9 +1,24 @@
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 
 vazifalar = ["Kitob o'qish", "Ish qilish"]
 foydalanuvchilar = ["Sardor", "Akmal", "Jasur"]
 
+class VazifaYarat(BaseModel):
+    nomi: str
+
+
 app = FastAPI()
+
+
+@app.post("/tasks", status_code=201 )
+def vazifa_qosh(vazifa: VazifaYarat):
+    vazifalar.append(vazifa.nomi)
+    return {"id": len(vazifalar) - 1, "nomi": vazifa.nomi}
+
+
+
+
 @app.get("/")
 def qaytar():
     return {"habar": "Hello World"}
@@ -27,4 +42,12 @@ def user(user_id: int):
     if user_id < 0 or user_id >= len(foydalanuvchilar):
         raise HTTPException(status_code=404, detail="Foydalanuvchi topilmadi")
     return {"foydalanuvchi": foydalanuvchilar[user_id]}
+
+
+
+
+
+
+
+
 
