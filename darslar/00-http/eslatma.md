@@ -269,7 +269,8 @@ def task(task_id: int):
 
 ### Type hint `: int`
 - URL — matn: `/tasks/0` dan `"0"` (str) keladi, ro'yxatga esa `0` (int) kerak
-- `: int` yozilmasa → `vazifalar["0"]` → **500** (`TypeError`)
+- `: int` yozilmasa → `vazifa
+- lar["0"]` → **500** (`TypeError`)
 - `: int` yozilsa → FastAPI matnni songa aylantiradi; `/tasks/abc` → **422** (yaroqsiz ma'lumot)
 
 ### 404 va `HTTPException`
@@ -280,3 +281,45 @@ def task(task_id: int):
 
 ### Endpoint funksiyasi nima qiladi?
 **Qabul qiladi → tekshiradi → topib qaytaradi.**
+
+## 9-dars · 6–8-oktyabr — POST, Pydantic va RAM
+
+### Yangi vazifa qayerda keladi?
+Konvertning ichida — **body**da: `{"nomi": "Referat yozish"}`.
+Yo'l esa faqat **qaysi to'plam** ekanini ko'rsatadi: `POST /tasks`.
+
+### Anketa — Pydantic modeli
+```python
+class VazifaYarat(BaseModel):
+    nomi: str
+```
+- `BaseModel` dan **meros** oladi
+- Body qanday ko'rinishda bo'lishi kerakligini aytadi: qaysi maydon (`nomi`) va qaysi turda (`str`)
+- Mos kelmasa (masalan, `nomi` o'rniga `ism`) — **422** "Field required"
+
+### POST endpoint va 201
+```python
+@app.post("/tasks", status_code=201)
+def vazifa_qosh(vazifa: VazifaYarat):
+    vazifalar.append(vazifa.nomi)
+    return {"id": len(vazifalar) - 1, "nomi": vazifa.nomi}
+```
+- **201** — yangi narsa yaratildi; u **yorliqda** yoziladi (`raise` — faqat xatolar uchun)
+- `curl -X POST` — mijoz tomoni (qaysi metod bilan so'rayapti), `status_code=201` — server tomoni (qaysi kod bilan javob beradi)
+
+### ID ni kim beradi? 🧾
+| | Kim beradi | Misol |
+|---|---|---|
+| `GET /tasks/7` | **mijoz** — URL'ga o'zi yozadi | "menga 7-sini ber" |
+| `POST /tasks` | **server** — yangi raqam beradi | javob: `{"id": 7, ...}` |
+
+Bank navbati kabi: chipta raqamini apparat beradi (POST), keyin o'sha raqamni o'zing ko'rsatasan (GET).
+
+### `len(vazifalar) - 1` nega `append` dan keyin?
+Javob qilinayotgan ishning tartibiga bog'liq: `append` dan keyin ro'yxatning haqiqiy uzunligi kelib chiqadi, yangi element esa oxirgi indeksda turadi (`len - 1`). Agar `append` dan oldin sanalsa — `- 1` kerak emas.
+
+### Nega server qayta ishga tushganda vazifalar yo'qoldi?
+Server ma'lumotlarni kompyuterning **RAM**ida saqlab turadi. Server to'xtab, qayta yonganda RAM ham yangilanadi — hamma ma'lumot o'chib ketadi.
+Shuning uchun ma'lumotni **SQL**, ya'ni **ma'lumotlar bazasi**da (diskda) saqlash kerak.
+- RAM — sinf doskasi 🧑‍🏫 (tez, lekin o'chiriladi)
+- Disk / baza — daftar 📓 (yozilgani qoladi)
