@@ -323,3 +323,62 @@ Server ma'lumotlarni kompyuterning **RAM**ida saqlab turadi. Server to'xtab, qay
 Shuning uchun ma'lumotni **SQL**, ya'ni **ma'lumotlar bazasi**da (diskda) saqlash kerak.
 - RAM — sinf doskasi 🧑‍🏫 (tez, lekin o'chiriladi)
 - Disk / baza — daftar 📓 (yozilgani qoladi)
+
+## 10-dars · 9–23-oktyabr — SQL asoslari
+
+### Baza, jadval, ustun va qator
+- **Baza** — jadvallar to'plami. Bitta `mashq.db` faylida bir nechta jadval bo'lishi mumkin: `royhat` va `ustozlar` (`.tables` bilan tekshirildi)
+- **Jadval** — bitta mavzu bo'yicha ma'lumotlar (masalan, talabalar ro'yxati yoki oylik chiqim). Talabalar bir jadvalda, ustozlar boshqasida
+- **Ustun** — ma'lumotlarni guruhlaydi: `ismi`, `yoshi`. Tepadan pastga qarab hammaning yoshini ushlaydi
+- **Qator** — bitta narsa (foydalanuvchi, xodim, vazifa) haqidagi barcha ustunlardagi ma'lumot
+
+📓 Baza — daftar, jadval — uning bir sahifasi.
+
+### PRIMARY KEY va NOT NULL
+```sql
+CREATE TABLE ustozlar (id INTEGER PRIMARY KEY, ismi TEXT NOT NULL, fan TEXT);
+```
+- **`PRIMARY KEY`** — har bir qatorning **takrorlanmas** raqami. `id` yozilmasa, baza o'zi beradi (Soliha → `1`).
+  Band raqam berilsa: `UNIQUE constraint failed: ustozlar.id`
+- **`NOT NULL`** — bu ustunni bo'sh qoldirib bo'lmaydi.
+  Ismsiz ustoz qo'shilsa: `NOT NULL constraint failed: ustozlar.ismi`
+
+### `.tables` va `DROP TABLE`
+- `.tables` — bazadagi jadvallarni ko'rsatadi
+- `DROP TABLE` — jadvalning ichidagi qatorlarni ham, **o'zini ham** o'chiradi
+- **Nega xavfli:** o'chirilgan jadvalni **qaytarib bo'lmaydi** — savatcha yo'q 🗑️
+
+### Jim xato 🤫
+**Jim xato** — xato chiqmaydi, lekin natija noto'g'ri bo'ladi.
+- **Qizil xato:** `IMTO` (`INTO` o'rniga) → baza darrov `Parse error` chiqardi 🔴
+- **Jim xato, 1-misol:** `ORDER BY yoshi` da `DESC` unutildi → xato yo'q, lekin tartib teskari chiqdi
+- **Jim xato, 2-misol:** `ismi == 'Umid' OR 'Asilbek'` — chala shart → xato yo'q, natija noto'g'ri
+
+Xato xabaridagi `near "..."` va `^---` xato **qayerdaligini** ko'rsatadi (`IMTO`, ko'rinmas belgi `�`).
+Hech narsa chiqmasa — buyruq umuman **ishga tushmagan**; qizil xato chiqsa — baza o'qidi, lekin **rad etdi**.
+
+### WHERE ning 3 qismi
+```sql
+WHERE yoshi > 18
+```
+**USTUN** (`yoshi`) · **BELGI** (`>`) · **QIYMAT** (`18`)
+
+### AND va OR
+- `AND` — ikkala shart ham to'g'ri bo'lsa bajariladi
+- `OR` — bittasi to'g'ri bo'lsa yetarli
+
+### ORDER BY, DESC, LIMIT
+- `ORDER BY` — kichikdan kattaga tartiblaydi
+- `DESC` — kattadan kichikka
+- `LIMIT` — nechta qator chiqishini belgilaydi
+- **Yozilish tartibi:** `WHERE` → `ORDER BY` → `LIMIT`
+
+```sql
+SELECT * FROM royhat WHERE yoshi > 18 ORDER BY yoshi DESC LIMIT 2;
+```
+
+### Teng qiymatlar tartibiga nega ishonib bo'lmaydi?
+Umar, Sanjar va G'ayrat — uchalasi 19 yoshda. `ORDER BY yoshi` da ularning o'zaro tartibini biz **aytmaganmiz**,
+shuning uchun baza buni **kafolatlamaydi**: bugun birinchi qo'shilgani chiqdi, ertaga boshqacha chiqishi mumkin.
+
+Yechim — ikkinchi ustun qo'shish: `ORDER BY yoshi, ismi` → yoshi teng bo'lsa, ismi bo'yicha 🔒
