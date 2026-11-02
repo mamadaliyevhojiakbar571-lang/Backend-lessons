@@ -382,3 +382,43 @@ Umar, Sanjar va G'ayrat — uchalasi 19 yoshda. `ORDER BY yoshi` da ularning o'z
 shuning uchun baza buni **kafolatlamaydi**: bugun birinchi qo'shilgani chiqdi, ertaga boshqacha chiqishi mumkin.
 
 Yechim — ikkinchi ustun qo'shish: `ORDER BY yoshi, ismi` → yoshi teng bo'lsa, ismi bo'yicha 🔒
+
+## 11-dars · 28 va 30-oktyabr — UPDATE
+
+### UPDATE nima qiladi? INSERT dan farqi nima?
+- `UPDATE` — **bor** qatordagi qiymatni o'zgartiradi → qatorlar soni o'zgarmaydi (3 → 3)
+- `INSERT` — **yangi** qator qo'shadi → qatorlar soni ortadi (3 → 4)
+
+### Yozilish qoidasi — 3 qism
+```sql
+UPDATE ustozlar SET fan = 'Kimyo' WHERE id = 3;
+```
+| Qism | Bazaga nima deydi |
+|---|---|
+| `UPDATE ustozlar` | qaysi jadval |
+| `SET fan = 'Kimyo'` | nimani nimaga o'zgartirish |
+| `WHERE id = 3` | qaysi qatorni |
+
+O'zgartirishdan **oldin** ma'lumotga qarash kerak: Soliha allaqachon `Ingliz tili` edi —
+uni yana `Ingliz tili` qiladigan `UPDATE` hech narsani o'zgartirmas edi.
+
+### Nega WHERE da `ismi` emas, `id` ishlatish kerak? (Dilnoza tajribasi)
+- Jadvalda 2 ta Dilnoza bor edi → `WHERE ismi = 'Dilnoza'` **ikkalasini ham** o'zgartirdi 🪤
+- `ismi` takrorlanishi mumkin, `id` esa **takrorlanmaydi** → `WHERE id = ...` doim **bitta** qatorni topadi
+
+### Bir nechta ustunni / bir nechta qatorni qanday o'zgartirasiz?
+```sql
+-- bir nechta ustun: SET ichida vergul bilan
+UPDATE ustozlar SET ismi = 'Zarina', fan = 'Fizika' WHERE id = 3;
+
+-- bir nechta qator: OR yoki IN
+UPDATE ustozlar SET fan = 'Tarix' WHERE id = 1 OR id = 2;
+UPDATE ustozlar SET fan = 'Tarix' WHERE id IN (1, 2);
+```
+SQL katta-kichik harfni farqlamaydi (`or` ham ishlaydi), lekin buyruq so'zlari odatda **KATTA** yoziladi —
+shunda buyruq qayerda, ma'lumot qayerda ekani darrov ko'rinadi.
+
+### Jim xato (28-oktyabr)
+- Soliha'ning fanini o'zgartirganda `'Ingiliz tili'` deb yozildi — **imlo xatosi**
+- SQLite **xato chiqarmadi**: u matnning imlosini tekshirmaydi → bazaga noto'g'ri ma'lumot yozildi 🤫
+- `SELECT` bilan tekshirib o'zim topdim va yana `UPDATE` bilan tuzatdim
