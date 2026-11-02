@@ -422,3 +422,61 @@ shunda buyruq qayerda, ma'lumot qayerda ekani darrov ko'rinadi.
 - Soliha'ning fanini o'zgartirganda `'Ingiliz tili'` deb yozildi — **imlo xatosi**
 - SQLite **xato chiqarmadi**: u matnning imlosini tekshirmaydi → bazaga noto'g'ri ma'lumot yozildi 🤫
 - `SELECT` bilan tekshirib o'zim topdim va yana `UPDATE` bilan tuzatdim
+
+## 12-dars · 2-noyabr — DELETE
+
+### CRUD — backend'dagi 4 ta amal
+| Harf | Ma'nosi | SQL |
+|---|---|---|
+| **C** | Create — yaratish | `INSERT` |
+| **R** | Read — o'qish | `SELECT` |
+| **U** | Update — o'zgartirish | `UPDATE` |
+| **D** | Delete — o'chirish | `DELETE` |
+
+### Yozilishi
+```sql
+DELETE FROM ustozlar WHERE id = 3;
+```
+- `SET` kerak emas: `DELETE` bitta ustunni emas, **butun qatorni** o'chiradi — "nimani nimaga" yo'q,
+  faqat **qaysi qator** (`WHERE id = ...`)
+- `WHERE` da `ismi` ham ishlaydi, lekin Dilnoza tuzog'i 🪤 — `DELETE` da bu yanada og'ir:
+  o'zgartirilgan qatorni tuzatsa bo'ladi, o'chirilganini **qaytarib bo'lmaydi** 🗑️
+
+### WHERE siz DELETE ⚠️
+```sql
+DELETE FROM ustozlar;
+```
+- **Hamma** qatorlar o'chadi, jadvalning o'zi qoladi (`.tables` da bor, `SELECT` bo'sh)
+- SQLite **"Ishonchingiz komilmi?"** deb so'ramaydi — bitta `Enter`, hammasi ketdi
+
+### Avval SELECT, keyin DELETE 🛡️
+```sql
+SELECT * FROM ustozlar WHERE id = 3;   -- 1) kimni o'chirayotganimni ko'raman
+DELETE FROM ustozlar WHERE id = 3;     -- 2) xuddi o'sha WHERE bilan o'chiraman
+```
+**Nega:** noto'g'ri qatorni o'chirib yubormaslik uchun.
+
+### DELETE va DROP farqi 📚
+Jadval — kitob javoni, qatorlar — kitoblar.
+
+| Buyruq | Kitoblar (qatorlar) | Javon (jadval) |
+|---|---|---|
+| `DELETE FROM ustozlar;` | ketadi | **qoladi** |
+| `DROP TABLE ustozlar;` | ketadi | **ketadi** |
+
+### O'chirilgandan keyin yangi id qanday beriladi?
+- SQLite: **yangi id = jadvaldagi eng katta id + 1**. Jadval bo'sh edi → Soliha `1` oldi (men `4` deb o'ylagandim)
+- PostgreSQL ishlatilgan raqamlarni eslab qoladi → u `4` bergan bo'lardi
+
+### Bitta INSERT bilan bir nechta qator
+```sql
+INSERT INTO ustozlar (ismi, fan) VALUES ('Dilnoza', 'Matematika'), ('Aziza', 'Fizika');
+```
+Har bir qator — o'z qavsida, qavslar orasida vergul.
+
+### Bugungi qizil xato 🔴
+```sql
+UPDATE ustozlar DELETE WHERE id = 3;
+```
+`Parse error: near "DELETE"` — `UPDATE` ichiga `DELETE` yozdim. `UPDATE ustozlar` dan keyin SQLite doim `SET` kutadi.
+`DELETE` — `UPDATE` ning bir qismi emas, **alohida buyruq**: `DELETE FROM jadval WHERE ...`
