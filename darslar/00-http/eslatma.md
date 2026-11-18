@@ -480,3 +480,78 @@ UPDATE ustozlar DELETE WHERE id = 3;
 ```
 `Parse error: near "DELETE"` — `UPDATE` ichiga `DELETE` yozdim. `UPDATE ustozlar` dan keyin SQLite doim `SET` kutadi.
 `DELETE` — `UPDATE` ning bir qismi emas, **alohida buyruq**: `DELETE FROM jadval WHERE ...`
+
+## 13-dars · 16–18-noyabr — FOREIGN KEY
+
+### FOREIGN KEY nima?
+**FOREIGN KEY** (begona kalit) — boshqa jadvalning `PRIMARY KEY` ini saqlaydigan ustun.
+Uni jadval eshigi oldidagi **qorovul** deb tasavvur qilsa bo'ladi 💂 Uning ikkita vazifasi bor:
+
+1. **Bog'laydi** — ustun qaysi jadvalga ishora qilishini ko'rsatadi 📎
+2. **Tekshiradi** — jadvalga kiritilayotgan ma'lumotni tekshiradi: ota jadvalda yo'q qiymatni kiritmaydi
+
+### Yetim qator 👻
+Boshqa jadvalda **mavjud bo'lmagan** qatorga ishora qiladigan qator.
+
+Misol: `bookings` jadvalida `pitch_id = 99`, lekin `pitches` jadvalida 99-maydon **yo'q** — o'yinchi
+mavjud bo'lmagan maydonni bron qilib qo'ygan bo'ladi ⚽ Bu katta xato, shuning uchun uni tekshirish kerak — buni FOREIGN KEY qiladi.
+
+### Yozilishi
+```sql
+CREATE TABLE guruhlar(
+    id INTEGER PRIMARY KEY,
+    nomi TEXT NOT NULL,
+    ustoz_id INTEGER NOT NULL,
+    FOREIGN KEY (ustoz_id) REFERENCES ustozlar(id)
+);
+```
+| Qism | Ma'nosi |
+|---|---|
+| `FOREIGN KEY (ustoz_id)` | **bu yoqdagi** ustun — shu jadvaldan |
+| `REFERENCES ustozlar` | **u yoqdagi** jadval |
+| `(id)` | u yoqdagi jadvalning ustuni |
+
+Bitta gap bilan: bu yoqdagi `ustoz_id` u yoqdagi `ustozlar` jadvalining `id` siga murojaat qiladi — `ustoz_id → ustozlar.id`.
+`FOREIGN KEY` ustunlardan **keyin**, vergul bilan yoziladi.
+
+### Nega `ustoz_id` — `PRIMARY KEY` emas?
+Bitta ustoz bir nechta guruhga dars berishi mumkin → `ustoz_id` da bir xil son (masalan, `1`) ikki marta yoziladi.
+`PRIMARY KEY` esa **takrorlanmaydi** → `UNIQUE constraint failed`. Shuning uchun `ustoz_id` — oddiy `INTEGER NOT NULL`.
+
+### ⚠️ SQLite'da FOREIGN KEY o'zi ishlamaydi — uni yoqish kerak
+```sql
+PRAGMA foreign_keys = ON;
+```
+- Yoqilmasa, jadval FOREIGN KEY yozilgan bo'lsa ham yetim qatorni **qabul qilaveradi** 😈
+- `.quit` bilan chiqib ketilsa, keyingi safar **yana yoqish** kerak
+
+Tajribam (`ustozlar` da faqat 1, 2, 3-id lar bor):
+
+| Holat | Natija |
+|---|---|
+| `ustoz_id = 7`, `PRAGMA` siz | qabul qilindi — yetim qator kirdi 👻 |
+| `PRAGMA foreign_keys = ON;` dan keyin `ustoz_id = 8` | `FOREIGN KEY constraint failed` 💂 |
+
+Yoqishdan oldin kirib olgan yetim qator jadvalda qolgan edi — uni o'zim o'chirdim:
+```sql
+DELETE FROM guruhlar WHERE id = 1;
+```
+
+### Loyihada (pitch-booking)
+```
+owner_id    → users.id
+customer_id → users.id
+pitch_id    → pitches.id
+```
+Shu uchta strelka `schema.sql` da uchta FOREIGN KEY bo'ldi.
+
+### Xatolarim
+| Xato | To'g'risi |
+|---|---|
+| `REFERENCES ustozlar(ustozlar_id)` — bunday ustun yo'q, lekin SQLite `CREATE` da xato bermadi | `ustozlar(id)` |
+| `)` va `;` ni unutdim → terminal `...>` da kutib qoldi | buyruq oxirida `);` |
+| `INSERT INTO guruhlar(nom, ...)` → `has no column named nom` | ustun nomi — `nomi` |
+| jadvalni `.schema` bilan ko'rmasdan `DROP` qildim → ustunlarini eslay olmadim | avval `.schema`, keyin `DROP` |
+| "FOREIGN KEY bor — demak xato chiqadi" deb o'yladim | SQLite'da avval `PRAGMA foreign_keys = ON;` |
+| `phone INTEGER` — boshidagi `0` yo'qoladi | `phone TEXT` |
+| commit: "users jadvali**ga** qo'shildi" — bitta qo'shimcha ma'noni o'zgartirdi | "users jadvali qo'shildi" |
