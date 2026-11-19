@@ -555,3 +555,135 @@ Shu uchta strelka `schema.sql` da uchta FOREIGN KEY bo'ldi.
 | "FOREIGN KEY bor — demak xato chiqadi" deb o'yladim | SQLite'da avval `PRAGMA foreign_keys = ON;` |
 | `phone INTEGER` — boshidagi `0` yo'qoladi | `phone TEXT` |
 | commit: "users jadvali**ga** qo'shildi" — bitta qo'shimcha ma'noni o'zgartirdi | "users jadvali qo'shildi" |
+
+## 14-dars · 18–19-noyabr — Python'dan SQLite va SQL injection
+
+### Python'dan bazaga ulanish — 4 qadam
+`sqlite3` Python'ning ichida bor — `pip install` shart emas.
+```
+connect → execute → fetchall → close
+```
+```python
+import sqlite3
+ulanish = sqlite3.connect('mashq.db')                  # 1. ulanish
+natija = ulanish.execute("SELECT * FROM ustozlar")     # 2. buyruq yuborish
+qatorlar = natija.fetchall()                           # 3. javobni olish
+for raqam, ismi, fan in qatorlar:
+    print(f"{raqam} - {ismi} - {fan}")
+ulanish.close()                                        # 4. yopish
+```
+- `fetchall()` **tuple'lar ro'yxati**ni qaytaradi: `[(1, 'Soliha', 'Ingliz tili'), (2, 'Dilnoza', 'Matematika'), ...]`
+- `qatorlar[1][2]` → 2-qatorning 3-ustuni → `'Matematika'` (indeks 0 dan boshlanadi)
+- `for raqam, ismi, fan in qatorlar:` — tuple'ni ochish: `qator[0]`, `qator[1]` kabi "sehrli raqamlar" o'rniga nomlar
+
+### SQL injection 😈
+Xaker formaga **tirnoqni yopib, OR qo'shadi** va bazaga ruxsatsiz kiradi.
+```python
+qidiruv = "x' OR '1'='1"
+f"SELECT * FROM ustozlar WHERE fan = '{qidiruv}'"
+# → SELECT * FROM ustozlar WHERE fan = 'x' OR '1'='1'
+```
+`'1'='1'` — **doim rost**. `OR` tufayli shart har bir qator uchun rost bo'ladi → **hamma ustoz chiqdi**.
+Teshik — **tirnoqning yopilishi**: foydalanuvchi yozgan ma'lumot buyruqqa aylanib qoladi.
+
+JavaScript'dagi `innerHTML` bilan bir xil g'oya — u yerda **XSS** deyiladi. Ikkalasi ham *injection* oilasidan.
+
+### Himoya: `?` — xavfsiz bo'sh joy 🛡️
+```python
+natija = ulanish.execute("SELECT * FROM ustozlar WHERE fan = ?", (qidiruv,))
+```
+- `?` ning ichiga nima tushsa ham — **matn** bo'lib qoladi, buyruq emas
+- `fan = ?` da **tirnoq yo'q** — xakerga yopadigan narsa qolmaydi
+- `?` lar **tartib bilan** to'ldiriladi: `"... fan = ? AND ismi = ?", (qidiruv, ism)`
+
+| Kiritilgan | f-string | `?` |
+|---|---|---|
+| `Fizika` | `3 - Aziza - Fizika` | `3 - Aziza - Fizika` |
+| `x' OR '1'='1` | 😈 hamma ustoz | 🛡️ hech kim (bunday fan yo'q) |
+
+### Vergul nega kerak — `(qidiruv,)`
+Vergulsiz tuple bo'lmaydi. `(5)` — shunchaki `5`, `(5,)` — tuple.
+Vergulsiz `(qidiruv)` → so'zning o'zi ketadi va **harfma-harf** bo'linadi:
+```
+Incorrect number of bindings supplied. The current statement uses 1, and there are 10 supplied.
+```
+`"Matematika"` — 10 ta harf = 10 ta qiymat 😄
+
+### Qidiruv sikli (o'z g'oyam)
+`input` + `while` bilan: fan kiritiladi → ustozlar chiqadi → "Yana qidirishni xohlaysizmi?"
+- `input()` **doim `str`** qaytaradi — `5` yozilsa ham `'5'` keladi (`type()` bilan tekshirdim: `<class 'str'>`)
+- `.strip()` — boshi va oxiridagi probellarni olib tashlaydi (JS'dagi `.trim()`)
+- `.lower()` — kichik harfga o'tkazadi (JS'dagi `.toLowerCase()`) → `Ha`, `HA` ham ishlaydi
+- `if qatorlar:` — bo'sh ro'yxat **yolg'on** → "topilmadi"
+
+### Xatolarim
+| Xato | To'g'risi |
+|---|---|
+| `import sqlite3` ni yozmadim → `NameError` | fayl boshida `import sqlite3` |
+| `close()` tushib qoldi | oxirida `ulanish.close()` |
+| `'qidiruv'` — `f` va `{}` siz, jim xato: `qidiruv` degan so'zni qidirdi | `f"... '{qidiruv}'"` (lekin xavfsizi — `?`) |
+| `(qidiruv)` — vergulsiz → `10 supplied` | `(qidiruv,)` |
+| `str(input(...))` — "input int qaytaradi" deb o'yladim | `input()` o'zi `str` |
+| `.strip()` ni boshqa `input` ga qo'ydim → `"  HA "` ishlamadi | ikkalasiga: `.strip().lower()` |
+| `AM` — PyCharm bo'sh faylni o'zi add qilgan, kod surati eskirgan | kod tugagach yana `git add baza.py` |
+
+## 15-dars · 19-noyabr — Python'dan INSERT va commit()
+
+### INSERT — `?` bilan
+```python
+ulanish.execute("INSERT INTO ustozlar(ismi, fan) VALUES (?, ?)", (ism, fan))
+```
+- 1-juft — **ustun nomlari**, 2-juft — **qiymatlar**. Tartib bir xil: 1-ustunga 1-qiymat
+- `id` yozilmaydi — `PRIMARY KEY` o'zi beradi
+- Qiymatni o'zim yozsam ham — **doim `?`**: ertaga u `input()` dan keladi
+
+### `commit()` — saqlash 💾
+`commit()` saqlash vazifasini bajaradi, `close()` esa yopadi. Shuning uchun `commit()` **`close()` dan oldin** yoziladi.
+```
+INSERT    → ✏️ qoralama (Python ko'radi, bazada yo'q)
+commit()  → 💾 saqlash (Word'dagi Cmd+S)
+close()   → 🔒 yopish — saqlanmagan qoralama o'chadi 🗑️
+```
+Tajribam — `close()` dan **keyin** `commit()`:
+
+| Qayerda | Natija |
+|---|---|
+| Python ekranida | `5 - Bekzod` — **bor** 👻 |
+| 9-qator `commit()` | `Cannot operate on a closed database` |
+| `sqlite3 mashq.db` | 5-qator **yo'q** — saqlanmagan |
+
+- `commit()` kerak: `INSERT`, `UPDATE`, `DELETE` — CRUD'ning **C, U, D**
+- `SELECT` (**R**) uchun kerak emas — u faqat o'qiydi
+- **git commit** ham xuddi shu g'oya: "o'zgarishlarni saqlab qo'y"
+
+### NULL, `""` va 0 — uch xil narsa
+| | Ma'nosi | `NOT NULL` |
+|---|---|---|
+| `NULL` | noma'lum — katakcha **bo'sh turibdi**, hech narsa yo'q 📭 | to'xtatadi 🛑 |
+| `""` | **bo'sh matn** — matn bor, uzunligi 0 📦 | o'tkazib yuboradi 🤷 |
+| `0` | **raqam** | o'tkazib yuboradi |
+
+Shuning uchun bo'sh kiritishni **Python'da** tekshiraman — bo'sh matn **yolg'on**:
+```python
+if not ism or not fan:
+    print("Xatolik: Ism yoki fan bo'sh bo'lishi mumkin emas!")
+```
+
+### Iflos ma'lumot 🧹
+Bitta fan bazada har xil yozilsa — `Ingliz tili` va `ingiliz-tili` — `"Ingliz tili"` deb qidirganda ikkinchisi **chiqmaydi**.
+Yangi qiymat bazadagi yozilishga mos bo'lishi kerak.
+
+### Ustoz qo'shish formasi (o'z g'oyam)
+`qoshish.py`: `while` ichida ism + fan kiritiladi → bo'sh emasligi tekshiriladi → `INSERT` + `commit()` → ro'yxat chiqadi.
+`for raqam, ismi, fan_nomi in natija:` — `fan` emas, chunki tepada `fan` o'zgaruvchisi bor, sikl uni **ustidan yozib** yuborardi.
+
+### Xatolarim
+| Xato | To'g'risi |
+|---|---|
+| qiymatlarni SQL matnining ichiga yozdim | `VALUES (?, ?)` + tuple |
+| `'ingiliz-tili'` — bazada `Ingliz tili` | bazadagi yozilishga moslash |
+| `SELECT ... WHERE fan = ?", ()` — hamma qator kerak edi | `"SELECT * FROM ustozlar"` — `WHERE` yo'q → `?` yo'q → tuple yo'q |
+| `close()` dan keyin `commit()` → saqlanmadi | avval `commit()`, keyin `close()` |
+| bo'sh Enter → ismsiz "arvoh" ustoz kirdi | `if not ism or not fan:` |
+| `""` = 0 deb o'yladim | `""` — bo'sh matn, 0 — raqam |
+| "commit CRUD uchun" — lekin R (`SELECT`) ga kerak emas | `commit()` — C, U, D uchun |
