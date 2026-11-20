@@ -14,10 +14,11 @@ while davom_etish:
         ulanish.commit()
         print("Muvaffaqiyatli qo'shildi!")
 
-    natija = ulanish.execute("SELECT * FROM ustozlar").fetchall()
-    print("\n--- Yangilangan ro'yxat ---")
-    for raqam, ismi, fan_nomi in natija:
-        print(f"{raqam} - {ismi} - {fan_nomi}")
+        natija = ulanish.execute("SELECT * FROM ustozlar").fetchall()
+        print("\n--- Yangilangan ro'yxat ---")
+
+        for raqam, ismi, fan_nomi in natija:
+            print(f"{raqam} - {ismi} - {fan_nomi}")
 
     sorov = input("\nYana ustoz qo'shasizmi? (ha/yo'q): ").strip().lower()
     if sorov != "ha":
